@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Kalkulačka důchodového spoření", layout="centered")
 
@@ -9,11 +10,13 @@ st.title("📈 Kalkulačka důchodového spoření")
 hruba_mzda = st.number_input("Hrubá mzda (měsíčně, Kč)", min_value=0.0, value=40000.0, step=1000.0)
 
 def synced_slider(label, min_val, max_val, default, step):
-    col1, col2 = st.columns([4, 1])
+    col1, col2 = st.columns([4, 1], gap="small")
     with col1:
         slider_val = st.slider(label, min_val, max_val, default, step=step, key=label+"_slider")
     with col2:
-        num_val = st.number_input(" ", min_value=min_val, max_value=max_val, value=slider_val, step=step, label_visibility="collapsed", key=label+"_input")
+        st.markdown("<div style='height: 30px'></div>", unsafe_allow_html=True)
+        num_val = st.number_input(" ", min_value=min_val, max_value=max_val, value=slider_val, step=step,
+                                 label_visibility="collapsed", key=label+"_input")
 
     # Synchronizace slideru a inputu
     if num_val != slider_val:
