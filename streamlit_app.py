@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Kalkulačka důchodového spoření", layout="centered")
 
@@ -23,11 +22,12 @@ def synced_slider(label, min_val, max_val, default, step):
         slider_val = num_val
     return slider_val
 
-rust_mzdy = synced_slider("Průměrný roční růst mzdy (%)", 0.0, 100.0, 3.0, 0.1)
-pocet_let = int(synced_slider("Počet let spoření", 1, 100, 30, 1))
+# Upravené posuvníky pro konkrétní hodnoty
+rust_mzdy = synced_slider("Průměrný roční růst mzdy (%)", 0.0, 10.0, 3.0, 0.1)
+pocet_let = int(synced_slider("Počet let spoření", 1, 50, 30, 1))
 procento_sporeni = synced_slider("Kolik % z hrubé mzdy chceš spořit", 0.0, 100.0, 31.3, 0.1)
-inflace = synced_slider("Meziroční inflace (%)", 0.0, 100.0, 2.5, 0.1)
-rust_investice = synced_slider("Roční výnos investice (%)", 0.0, 100.0, 6.0, 0.1)
+inflace = synced_slider("Meziroční inflace (%)", 0.0, 10.0, 2.5, 0.1)
+rust_investice = synced_slider("Roční výnos investice (%)", 0.0, 20.0, 6.0, 0.1)
 
 # Přepčet na desetinná čísla
 rust_mzdy /= 100
@@ -63,9 +63,15 @@ df = pd.DataFrame(data)
 
 # Zobrazení výsledků
 st.subheader("📊 Shrnutí")
-st.markdown(f"### Celková naspořená částka: **{df['Nominální hodnota'].iloc[-1]:,.0f} Kč**")
-st.markdown(f"### Očištěná o inflaci: **{df['Reálná hodnota'].iloc[-1]:,.0f} Kč**")
-st.markdown(f"<small>Investovaná částka: {df['Investovaná částka'].iloc[-1]:,.0f} Kč</small>", unsafe_allow_html=True)
+
+zobrazeni = st.radio("Zobrazit hodnoty: ", ["Nominální", "Po inflaci"])
+
+if zobrazeni == "Nominální":
+    st.markdown(f"### Celková naspořená částka: **{df['Nominální hodnota'].iloc[-1]:,.0f} Kč**")
+    st.markdown(f"### Investovaná částka: **{df['Investovaná částka'].iloc[-1]:,.0f} Kč**")
+else:
+    st.markdown(f"### Celková naspořená částka (očištěná o inflaci): **{df['Reálná hodnota'].iloc[-1]:,.0f} Kč**")
+    st.markdown(f"### Investovaná částka: **{df['Investovaná částka'].iloc[-1]:,.0f} Kč**")
 
 # Tlačítko pro zobrazení renty
 if st.button("Spočítat bezpečnou roční rentu"):
@@ -76,7 +82,6 @@ if st.button("Spočítat bezpečnou roční rentu"):
 
 # Interaktivní graf
 st.subheader("📉 Graf vývoje spoření")
-zobrazeni = st.radio("Zobrazit hodnoty: ", ["Nominální", "Po inflaci"])
 
 if zobrazeni == "Nominální":
     fig = px.bar(df, x="Rok", y=["Investovaná částka", "Nominální hodnota"],
