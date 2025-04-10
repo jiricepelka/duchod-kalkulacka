@@ -1,11 +1,12 @@
 import streamlit as st
-import matplotlib.pyplot as plt
+import pandas as pd
+import plotly.express as px
 
 st.set_page_config(page_title="Kalkulačka důchodového spoření", layout="centered")
 
-st.title("📈 Kalkulačka důchodového spoření")
+st.title("\U0001F4C8 Kalkulačka důchodového spoření")
 
-# Uživatelské vstupy
+# Úzivatelské vstupy
 hruba_mzda = st.number_input("Hrubá mzda (měsíčně, Kč)", min_value=0.0, value=40000.0, step=1000.0)
 rust_mzdy = st.slider("Průměrný roční růst mzdy (%)", 0.0, 10.0, 3.0)
 pocet_let = st.slider("Počet let spoření", 1, 50, 30)
@@ -20,34 +21,55 @@ inflace /= 100
 rust_investice /= 100
 
 # Výpočet spoření
-nominální_rocni_zustatek = []
-realna_rocni_zustatek = []
+data = []
 celkove_uspory = 0
+celkem_investovano = 0
 
 for rok in range(1, pocet_let + 1):
     aktualni_mzda = hruba_mzda * ((1 + rust_mzdy) ** (rok - 1))
     rocni_vklad = aktualni_mzda * 12 * procento_sporeni
     doba_investice = pocet_let - (rok - 1)
     bud_hodnota = rocni_vklad * ((1 + rust_investice) ** doba_investice)
+
     celkove_uspory += bud_hodnota
+    celkem_investovano += rocni_vklad
 
-    nominální_rocni_zustatek.append(celkove_uspory)
-    realna_rocni_zustatek.append(celkove_uspory / ((1 + inflace) ** rok))
+    nomin = celkove_uspory
+    real = celkove_uspory / ((1 + inflace) ** rok)
 
-# Výstup
-st.subheader("📊 Výsledky")
-st.write(f"**Celková naspořená částka (nominálně):** {nominální_rocni_zustatek[-1]:,.0f} Kč")
-st.write(f"**Očištěno o inflaci (reálná hodnota dnes):** {realna_rocni_zustatek[-1]:,.0f} Kč")
+    data.append({
+        "Rok": rok,
+        "Investovaná částka": round(celkem_investovano),
+        "Nominální hodnota": round(nomin),
+        "Reálná hodnota": round(real)
+    })
 
-# Graf
-fig, ax = plt.subplots()
-roky = list(range(1, pocet_let + 1))
-ax.plot(roky, nominální_rocni_zustatek, label="Nominální hodnota")
-ax.plot(roky, realna_rocni_zustatek, label="Reálná hodnota (po inflaci)", linestyle="--")
-ax.set_xlabel("Rok")
-ax.set_ylabel("Naspořená částka (Kč)")
-ax.set_title("Vývoj důchodového spoření")
-ax.legend()
-ax.grid(True)
+# DataFrame pro graf
+df = pd.DataFrame(data)
 
-st.pyplot(fig)
+# Zobrazení výsledků
+st.subheader("\U0001F4CA Shrnutí")
+st.markdown(f"### Celková naspořená částka: **{df['Nominální hodnota'].iloc[-1]:,.0f} Kč**")
+st.markdown(f"### Očištěná o inflaci: **{df['Reálná hodnota'].iloc[-1]:,.0f} Kč**")
+st.markdown(f"<small>Investovaná částka: {df['Investovaná částka'].iloc[-1]:,.0f} Kč</small>", unsafe_allow_html=True)
+
+# Tlačítko pro zobrazení renty
+if st.button("Spočítat bezpečnou roční rentu"):
+    realny_vynos = rust_investice - inflace
+    renta = df['Reálná hodnota'].iloc[-1] * realny_vynos
+    st.markdown(f"### Bezpečná roční renta: **{renta:,.0f} Kč/rok**")
+    st.caption("Vypočteno jako naspořená částka × (výnos - inflace). Předpoklad: částku nevyčerpáš a necháš jí investovanou.")
+
+# Interaktivní graf
+st.subheader("\U0001F4C9 Graf vývoje spoření")
+zobrazeni = st.radio("Zobrazit hodnoty: ", ["Nominální", "Po inflaci"])
+
+if zobrazeni == "Nominální":
+    fig = px.bar(df, x="Rok", y=["Investovaná částka", "Nominální hodnota"],
+                 barmode='group', title="Nominální hodnota vs. investice")
+else:
+    fig = px.bar(df, x="Rok", y=["Investovaná částka", "Reálná hodnota"],
+                 barmode='group', title="Reálná hodnota (očištěná o inflaci) vs. investice")
+
+fig.update_layout(xaxis_title="Rok", yaxis_title="Kč", legend_title="")
+st.plotly_chart(fig, use_container_width=True)
