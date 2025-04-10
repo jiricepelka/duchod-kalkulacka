@@ -24,24 +24,28 @@ rust_investice /= 100
 data = []
 celkove_uspory = 0
 celkem_investovano = 0
+realna_uspora = 0
 
 for rok in range(1, pocet_let + 1):
     aktualni_mzda = hruba_mzda * ((1 + rust_mzdy) ** (rok - 1))
     rocni_vklad = aktualni_mzda * 12 * procento_sporeni
     doba_investice = pocet_let - (rok - 1)
-    bud_hodnota = rocni_vklad * ((1 + rust_investice) ** doba_investice)
 
-    celkove_uspory += bud_hodnota
+    # Nominální budoucí hodnota
+    bud_hodnota_nom = rocni_vklad * ((1 + rust_investice) ** doba_investice)
+
+    # Reálná budoucí hodnota
+    bud_hodnota_real = bud_hodnota_nom / ((1 + inflace) ** doba_investice)
+
     celkem_investovano += rocni_vklad
-
-    nomin = celkove_uspory
-    real = celkove_uspory / ((1 + inflace) ** rok)
+    celkove_uspory += bud_hodnota_nom
+    realna_uspora += bud_hodnota_real
 
     data.append({
         "Rok": rok,
         "Investovaná částka": round(celkem_investovano),
-        "Nominální hodnota": round(nomin),
-        "Reálná hodnota": round(real)
+        "Nominální hodnota": round(celkove_uspory),
+        "Reálná hodnota": round(realna_uspora)
     })
 
 # DataFrame pro graf
@@ -58,7 +62,7 @@ if st.button("Spočítat bezpečnou roční rentu"):
     realny_vynos = rust_investice - inflace
     renta = df['Reálná hodnota'].iloc[-1] * realny_vynos
     st.markdown(f"### Bezpečná roční renta: **{renta:,.0f} Kč/rok**")
-    st.caption("Vypočteno jako naspořená částka × (výnos - inflace). Předpoklad: částku nevyčerpáš a necháš jí investovanou.")
+    st.caption("Vypočteno jako naspořená částka × (výnos - inflace). Předpoklad: částku nevyčerpáš a necháš ji investovanou.")
 
 # Interaktivní graf
 st.subheader("\U0001F4C9 Graf vývoje spoření")
