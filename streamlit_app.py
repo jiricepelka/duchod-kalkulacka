@@ -6,13 +6,34 @@ st.set_page_config(page_title="Kalkulačka důchodového spoření", layout="cen
 
 st.title("📈 Kalkulačka důchodového spoření")
 
-# Úživatelské vstupy
+# Uživatelské vstupy (slider + number_input vedle sebe)
+col1, col2 = st.columns([2, 1])
+with col1:
+    rust_mzdy_slider = st.slider("Průměrný roční růst mzdy (%)", 0.0, 10.0, 3.0)
+with col2:
+    rust_mzdy = st.number_input("", value=rust_mzdy_slider, step=0.1, label_visibility="collapsed")
+
+with col1:
+    pocet_let_slider = st.slider("Počet let spoření", 1, 50, 30)
+with col2:
+    pocet_let = st.number_input("", min_value=1, value=pocet_let_slider, step=1, label_visibility="collapsed")
+
+with col1:
+    procento_sporeni_slider = st.slider("Kolik % z hrubé mzdy chceš spořit", 0.0, 100.0, 31.3)
+with col2:
+    procento_sporeni = st.number_input("", value=procento_sporeni_slider, step=0.1, label_visibility="collapsed")
+
+with col1:
+    inflace_slider = st.slider("Meziroční inflace (%)", 0.0, 10.0, 2.5)
+with col2:
+    inflace = st.number_input("", value=inflace_slider, step=0.1, label_visibility="collapsed")
+
+with col1:
+    rust_investice_slider = st.slider("Roční výnos investice (%)", 0.0, 15.0, 6.0)
+with col2:
+    rust_investice = st.number_input("", value=rust_investice_slider, step=0.1, label_visibility="collapsed")
+
 hruba_mzda = st.number_input("Hrubá mzda (měsíčně, Kč)", min_value=0.0, value=40000.0, step=1000.0)
-rust_mzdy = st.slider("Průměrný roční růst mzdy (%)", 0.0, 10.0, 3.0)
-pocet_let = st.slider("Počet let spoření", 1, 50, 30)
-procento_sporeni = st.slider("Kolik % z hrubé mzdy chceš spořit", 0.0, 100.0, 31.3)
-inflace = st.slider("Meziroční inflace (%)", 0.0, 10.0, 2.5)
-rust_investice = st.slider("Roční výnos investice (%)", 0.0, 15.0, 6.0)
 
 # Přepčet na desetinná čísla
 rust_mzdy /= 100
