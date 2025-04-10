@@ -1,0 +1,2 @@
+# duchod-kalkulacka
+kalkulacka
